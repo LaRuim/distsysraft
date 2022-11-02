@@ -9,6 +9,8 @@ type RequestVoteArgs struct {
 	CandidateId  int
 	LastLogIndex int
 	LastLogTerm  int
+
+	Latency int
 }
 
 type RequestVoteReply struct {
@@ -73,6 +75,8 @@ type AppendEntriesArgs struct {
 	PrevLogTerm  int
 	Entries      []LogEntry
 	LeaderCommit int
+
+	Latency int
 }
 
 type AppendEntriesReply struct {

@@ -75,6 +75,8 @@ func (this *RaftNode) startElection() {
 				CandidateId:  this.id,
 				LastLogIndex: LastLogIndexWhenVoteRequested,
 				LastLogTerm:  LastLogTermWhenVoteRequested,
+
+				Latency: rand.Intn(500),
 			}
 
 			if VoteRequestLogs {

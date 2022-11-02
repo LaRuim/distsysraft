@@ -3,7 +3,6 @@ package raft
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"net"
 	"net/rpc"
 	"sync"
@@ -25,10 +24,11 @@ type Server struct {
 	quit  chan interface{}
 	wg    sync.WaitGroup
 
-	raftLogic *RaftNode // Added in RaftLogic component
+	raftLogic     *RaftNode // Added in RaftLogic component
+	minRPCLatency int
 }
 
-func NewRPCServer(serverId int, peersIds []int, ready <-chan interface{}) *Server {
+func NewServer(serverId int, peersIds []int, ready <-chan interface{}, minRPCLatency int) *Server {
 	this := new(Server)
 
 	this.serverId = serverId
@@ -37,6 +37,8 @@ func NewRPCServer(serverId int, peersIds []int, ready <-chan interface{}) *Serve
 
 	this.ready = ready
 	this.quit = make(chan interface{})
+
+	this.minRPCLatency = minRPCLatency
 
 	return this
 }
@@ -150,17 +152,11 @@ func (this *Server) DisconnectAll() {
 /* To actually add a delay for each request, a wrapper */
 
 func (this *Server) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) error {
-	if rand.Intn(10) == 7 {
-		return fmt.Errorf("RPC failed")
-	}
-	sleepMs(20 + rand.Intn(500))
+	sleepMs(this.minRPCLatency + args.Latency) // Add Latency
 	return this.raftLogic.HandleRequestVote(args, reply)
 }
 
 func (this *Server) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply) error {
-	if rand.Intn(10) == 7 {
-		return fmt.Errorf("RPC failed")
-	}
-	sleepMs(20 + rand.Intn(500))
+	sleepMs(this.minRPCLatency + args.Latency) // Add Latency
 	return this.raftLogic.HandleAppendEntries(args, reply)
 }

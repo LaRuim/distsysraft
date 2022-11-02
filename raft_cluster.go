@@ -41,7 +41,13 @@ func NewCluster(t *testing.T, n int) *Cluster {
 			}
 		}
 
-		ns[i] = NewRPCServer(i, peersIds, ready)
+		// if i == 2 {
+		// 	ns[i] = NewServer(i, peersIds, ready, 100)
+		// } else {
+		// 	ns[i] = NewServer(i, peersIds, ready, 20)
+		// }
+
+		ns[i] = NewServer(i, peersIds, ready, 20)
 		ns[i].Serve()
 	}
 

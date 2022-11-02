@@ -1,6 +1,9 @@
 package raft
 
-import "time"
+import (
+	"math/rand"
+	"time"
+)
 
 // startLeader switches this into a leader state and begins process of heartbeats.
 func (this *RaftNode) startLeader() {
@@ -70,6 +73,7 @@ func (this *RaftNode) broadcastHeartbeats() {
 				PrevLogTerm:  prevLogTerm,
 				Entries:      entries,
 				LeaderCommit: this.commitIndex,
+				Latency:      rand.Intn(500),
 			}
 
 			this.mu.Unlock()
