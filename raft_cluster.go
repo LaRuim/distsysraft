@@ -85,6 +85,7 @@ func (this *Cluster) DisconnectPeer(id int) {
 		}
 	}
 	this.connected[id] = false
+
 	this.nodes[id].raftLogic.mu.Lock()
 	this.nodes[id].raftLogic.LOG_ENTRIES = false
 	this.nodes[id].raftLogic.mu.Unlock()
@@ -105,6 +106,7 @@ func (this *Cluster) ReconnectPeer(id int) {
 		}
 	}
 	this.connected[id] = true
+
 	this.nodes[id].raftLogic.mu.Lock()
 	this.nodes[id].raftLogic.LOG_ENTRIES = true
 	this.nodes[id].raftLogic.mu.Unlock()
@@ -113,17 +115,15 @@ func (this *Cluster) ReconnectPeer(id int) {
 /* getClusterLeader checks that only a single server thinks it's the leader.
 Returns the leader's id and term. It retries several times if no leader is
 identified yet. */
-func (this *Cluster) getClusterLeader() (int, int) {
+func (this *Cluster) getClusterLeader() int {
 	for r := 0; r < 20; r++ {
 		leaderId := -1
-		leaderTerm := -1
 		for i := 0; i < this.n; i++ {
 			if this.connected[i] {
-				_, term, isLeader := this.nodes[i].raftLogic.GetNodeState()
+				_, _, isLeader := this.nodes[i].raftLogic.GetNodeState()
 				if isLeader {
 					if leaderId < 0 {
 						leaderId = i
-						leaderTerm = term
 					} else {
 						this.t.Fatalf("Somehow have more than one leader!!!!!")
 					}
@@ -131,13 +131,13 @@ func (this *Cluster) getClusterLeader() (int, int) {
 			}
 		}
 		if leaderId >= 0 {
-			return leaderId, leaderTerm
+			return leaderId
 		}
 		sleepMs(750)
 	}
 
 	this.t.Fatalf("leader not found")
-	return -1, -1
+	return -1
 }
 
 // SubmitClientCommand submits the command to serverId.
