@@ -16,8 +16,6 @@ type Server struct {
 	serverId int
 	peersIds []int
 
-	raftLogic *RaftNode
-
 	RPCServer *rpc.Server
 	listener  net.Listener
 
@@ -26,10 +24,13 @@ type Server struct {
 	ready <-chan interface{}
 	quit  chan interface{}
 	wg    sync.WaitGroup
+
+	raftLogic *RaftNode // Added in RaftLogic component
 }
 
 func NewRPCServer(serverId int, peersIds []int, ready <-chan interface{}) *Server {
 	this := new(Server)
+
 	this.serverId = serverId
 	this.peersIds = peersIds
 	this.peerClients = make(map[int]*rpc.Client)
@@ -42,6 +43,8 @@ func NewRPCServer(serverId int, peersIds []int, ready <-chan interface{}) *Serve
 
 func (this *Server) Serve() {
 	this.mu.Lock()
+
+	// Add in logic component
 	this.raftLogic = NewRaftNode(this.serverId, this.peersIds, this, this.ready)
 
 	// Create a new RPC server
@@ -98,22 +101,11 @@ func (this *Server) Call(id int, serviceMethod string, args interface{}, reply i
 	}
 }
 
-/* To actually add a delay for each request */
-
-func (this *Server) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) error {
-	if rand.Intn(10) == 7 {
-		return fmt.Errorf("RPC failed")
-	}
-	sleepMs(20 + rand.Intn(500))
-	return this.raftLogic.HandleRequestVote(args, reply)
-}
-
-func (this *Server) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply) error {
-	if rand.Intn(10) == 7 {
-		return fmt.Errorf("RPC failed")
-	}
-	sleepMs(20 + rand.Intn(500))
-	return this.raftLogic.HandleAppendEntries(args, reply)
+func (this *Server) Shutdown() {
+	this.raftLogic.KillNode() // Make sure heartbeats and requests stop
+	close(this.quit)
+	this.listener.Close()
+	this.wg.Wait()
 }
 
 /* Functions that facilitate peer to peer connection/disconnection */
@@ -153,9 +145,20 @@ func (this *Server) DisconnectAll() {
 	}
 }
 
-func (this *Server) Shutdown() {
-	this.raftLogic.KillNode()
-	close(this.quit)
-	this.listener.Close()
-	this.wg.Wait()
+/* To actually add a delay for each request, a wrapper */
+
+func (this *Server) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) error {
+	if rand.Intn(10) == 7 {
+		return fmt.Errorf("RPC failed")
+	}
+	sleepMs(20 + rand.Intn(500))
+	return this.raftLogic.HandleRequestVote(args, reply)
+}
+
+func (this *Server) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply) error {
+	if rand.Intn(10) == 7 {
+		return fmt.Errorf("RPC failed")
+	}
+	sleepMs(20 + rand.Intn(500))
+	return this.raftLogic.HandleAppendEntries(args, reply)
 }
