@@ -161,9 +161,7 @@ func (this *RaftNode) HandleAppendEntries(args AppendEntriesArgs, reply *AppendE
 	return nil
 }
 
-/* -------------------------------------------------------------------------------------- */
-
-// Either handle Command or divert it to Leader
+// Either handle Command or tell to divert it to Leader
 func (this *RaftNode) ReceiveClientCommand(command interface{}) bool {
 	this.mu.Lock()
 	defer this.mu.Unlock()
@@ -171,7 +169,7 @@ func (this *RaftNode) ReceiveClientCommand(command interface{}) bool {
 	this.write_log("ReceiveClientCommand received by %s: %v", this.state, command)
 	if this.state == "Leader" {
 		this.log = append(this.log, LogEntry{Command: command, Term: this.currentTerm})
-		this.write_log("      Log=%v", this.log)
+		this.write_log("Log=%v", this.log)
 		return true
 	}
 	return false
