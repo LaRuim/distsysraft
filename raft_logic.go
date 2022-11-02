@@ -169,7 +169,7 @@ func (this *RaftNode) startElection() {
 			}
 
 			var reply RequestVoteReply
-			if err := this.server.Call(peerId, "RaftNode.RequestVote", args, &reply); err == nil {
+			if err := this.server.SendRPCCallTo(peerId, "RaftNode.RequestVote", args, &reply); err == nil {
 				this.mu.Lock()
 				defer this.mu.Unlock()
 				if VoteRequestLogs {

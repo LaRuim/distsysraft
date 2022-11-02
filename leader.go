@@ -78,7 +78,7 @@ func (this *RaftNode) broadcastHeartbeats() {
 			}
 
 			var reply AppendEntriesReply
-			if err := this.server.Call(peerId, "RaftNode.AppendEntries", args, &reply); err == nil {
+			if err := this.server.SendRPCCallTo(peerId, "RaftNode.AppendEntries", args, &reply); err == nil {
 				this.mu.Lock()
 				defer this.mu.Unlock()
 

@@ -89,7 +89,7 @@ func (this *Server) GetCurrentAddress() net.Addr {
 	return this.listener.Addr()
 }
 
-func (this *Server) Call(id int, serviceMethod string, args interface{}, reply interface{}) error {
+func (this *Server) SendRPCCallTo(id int, serviceMethod string, args interface{}, reply interface{}) error {
 	this.mu.Lock()
 	peer := this.peerClients[id]
 	this.mu.Unlock()
@@ -144,6 +144,8 @@ func (this *Server) DisconnectAll() {
 		}
 	}
 }
+
+// Register Custom Methods here:
 
 /* To actually add a delay for each request, a wrapper */
 
